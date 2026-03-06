@@ -73,10 +73,135 @@ toSelect.addEventListener('change',   () => { log.info('To currency changed:',  
 
 // Functions
 
+function setAmount(val) {
+  document.getElementById('amount').value = val;
+}
+
+// ── Custom searchable select ──────────────────────────────────────────────────
+
+const csUpdaters = {};
+
+function setupCustomSelect(id) {
+  const select = document.getElementById(id);
+  select.style.display = 'none';
+
+  // Wrap the hidden select
+  const wrap = document.createElement('div');
+  wrap.className = 'cs-wrap';
+  select.parentNode.insertBefore(wrap, select);
+  wrap.appendChild(select);
+
+  // Trigger button (replaces the visible select)
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'cs-trigger';
+
+  // Dropdown panel
+  const panel = document.createElement('div');
+  panel.className = 'cs-panel';
+
+  const search = document.createElement('input');
+  search.className = 'cs-search';
+  search.type = 'text';
+  search.placeholder = 'Search currency…';
+  search.autocomplete = 'off';
+
+  const list = document.createElement('ul');
+  list.className = 'cs-list';
+
+  panel.appendChild(search);
+  panel.appendChild(list);
+  wrap.appendChild(trigger);
+  wrap.appendChild(panel);
+
+  function renderList(filter) {
+    const q = (filter || '').toLowerCase();
+    list.innerHTML = '';
+    const matches = currencies.filter(c => !q || c.toLowerCase().includes(q));
+
+    if (matches.length === 0) {
+      list.innerHTML = `<li class="cs-empty">No results for "${filter}"</li>`;
+      return;
+    }
+
+    matches.forEach(c => {
+      const li = document.createElement('li');
+      li.className = 'cs-item' + (c === select.value ? ' cs-selected' : '');
+      li.dataset.value = c;
+      li.innerHTML = `<span class="cs-item-flag">${flags[c] || ''}</span><span class="cs-item-code">${c}</span>`;
+      li.addEventListener('mousedown', (e) => {
+        e.preventDefault(); // prevent search blur closing panel first
+        select.value = c;
+        select.dispatchEvent(new Event('change'));
+        updateTrigger();
+        closePanel();
+      });
+      list.appendChild(li);
+    });
+
+    const selected = list.querySelector('.cs-selected');
+    if (selected) selected.scrollIntoView({ block: 'nearest' });
+  }
+
+  function updateTrigger() {
+    const c = select.value;
+    trigger.innerHTML = `
+      <span class="cs-trigger-flag">${flags[c] || ''}</span>
+      <span class="cs-trigger-code">${c}</span>
+      <svg class="cs-caret" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`;
+  }
+
+  function openPanel() {
+    document.querySelectorAll('.cs-panel.cs-open').forEach(p => {
+      if (p !== panel) {
+        p.classList.remove('cs-open');
+        p.previousElementSibling.classList.remove('cs-open');
+      }
+    });
+    panel.classList.add('cs-open');
+    trigger.classList.add('cs-open');
+    search.value = '';
+    renderList('');
+    search.focus();
+  }
+
+  function closePanel() {
+    panel.classList.remove('cs-open');
+    trigger.classList.remove('cs-open');
+  }
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    panel.classList.contains('cs-open') ? closePanel() : openPanel();
+  });
+
+  search.addEventListener('input', () => renderList(search.value));
+
+  search.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closePanel();
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!wrap.contains(e.target)) closePanel();
+  });
+
+  updateTrigger();
+  csUpdaters[id] = updateTrigger;
+}
+
+function initCustomSelects() {
+  setupCustomSelect('from');
+  setupCustomSelect('to');
+}
+
 function swapCurrencies() {
   const tmp = fromSelect.value;
   fromSelect.value = toSelect.value;
   toSelect.value = tmp;
+  csUpdaters['from']?.();
+  csUpdaters['to']?.();
   log.info('Currencies swapped:', fromSelect.value, '↔', toSelect.value);
 }
 
@@ -258,5 +383,6 @@ function clearHistory() {
 //Initialise
 
 log.info('App initialising...');
+initCustomSelects();
 renderHistory();
 loadNews();
