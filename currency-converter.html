@@ -4,18 +4,35 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Currency Converter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+
+  <!-- Ambient glow orbs -->
+  <div class="bg-glow" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
 
   <!-- Scattered news background, desktop only -->
   <div id="newsBackground" aria-hidden="true"></div>
 
   <!-- Main converter -->
   <div class="card">
+
+    <div class="brand">
+      <span class="brand-icon">&#x20BF;</span>
+    </div>
+
     <h1>Currency Converter</h1>
     <p class="subtitle">Live exchange rates</p>
+
+    <div class="divider"></div>
 
     <label>Amount</label>
     <input type="number" id="amount" placeholder="Enter amount" value="1" min="0" />
@@ -25,7 +42,7 @@
         <label>From</label>
         <select id="from"></select>
       </div>
-      <button class="swap-btn" onclick="swapCurrencies()" title="Swap">⇄</button>
+      <button class="swap-btn" onclick="swapCurrencies()" title="Swap">&#x21C4;</button>
       <div>
         <label>To</label>
         <select id="to"></select>
@@ -37,9 +54,11 @@
     <div class="spinner" id="spinner">Fetching live rate...</div>
 
     <div class="result" id="result">
-      <div class="converted" id="convertedValue"></div>
-      <div class="rate-info" id="rateInfo"></div>
-      <button class="copy-btn" onclick="copyResult()" title="Copy result">Copy</button>
+      <div class="result-inner">
+        <div class="converted" id="convertedValue"></div>
+        <div class="rate-info" id="rateInfo"></div>
+        <button class="copy-btn" onclick="copyResult()" title="Copy result">Copy</button>
+      </div>
     </div>
 
     <div class="error" id="error"></div>
@@ -56,6 +75,7 @@
       </div>
       <ul id="historyList"></ul>
     </div>
+
   </div>
 
   <script src="news.js"></script>
